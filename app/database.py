@@ -2,6 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
+
 # Database Configuration
 MYSQL_HOST = "localhost"
 MYSQL_PORT = 3306
@@ -23,3 +24,4 @@ def test_connection():
             print("✅ Database connected successfully!")
     except Exception as e:
         print(f"❌ Database connection failed: {e}")
+
