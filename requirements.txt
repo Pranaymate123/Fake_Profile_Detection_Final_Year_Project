@@ -1,5 +1,7 @@
-fastapi
+fastapi~=0.115.7
 uvicorn
 xgboost
 numpy
 pydantic
+
+SQLAlchemy~=2.0.39
