@@ -5,14 +5,13 @@ from app.database import SessionLocal, test_connection
 from app.database import engine
 from app.models import Base
 
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException , Body
 from sqlalchemy.orm import Session
 from app.models import Profile
 from app.schemas import BulkProfilesRequest, SuccessResponse, ErrorResponse
 from app.predictor import predict_profile
 from app.constants import SUCCESS, ERRORS
-from app.services import store_profile
-
+from app.services import store_profile, generate_profile_ref
 
 app = FastAPI()
 
@@ -28,35 +27,27 @@ def get_db():
     finally:
         db.close()
 
-@app.get("/")
-def home():
-    return {"message": "FastAPI with MySQL - Fake Profiles DB"}
-
-@app.get("/test-db")
-def test_db_connection():
-    try:
-        test_connection()
-        return {"status": "success", "message": "Database connected!"}
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
 
 @app.post("/add-profiles", response_model=SuccessResponse, responses={400: {"model": ErrorResponse}})
-def add_profiles(request: BulkProfilesRequest, db: Session = Depends(get_db)):
+def add_profiles(request: BulkProfilesRequest = Body(...), db: Session = Depends(get_db)):
     try:
         predictions = []
 
         for profile_data in request.profiles:
-            prediction = predict_profile(profile_data.dict())  # Now returns 0 or 1
+            profile_dict = profile_data.dict()  # Updated for Pydantic v2
 
-            # Ensure prediction is directly used (no indexing needed)
-            status = int(prediction)  # 0 (Fake) or 1 (Legit)
+            # Generate unique profile reference
+            profile_ref = generate_profile_ref(profile_dict)
 
-            # Store the profile in the database immediately
-            stored_profile = store_profile(db, profile_data, status)
+            # Get prediction (0 = Fake, 1 = Legit)
+            status = predict_profile(profile_dict)  # No need to convert
 
-            # Append results
+            # Store the profile (prevents duplicate storage)
+            stored_profile = store_profile(db, profile_ref, status)
+
+            # Append results with profile_ref instead of id
             predictions.append({
-                "id": stored_profile.id,
+                "profile_ref": stored_profile.profile_ref,
                 "prediction": "Fake" if status == 0 else "Legit"
             })
 
@@ -64,10 +55,9 @@ def add_profiles(request: BulkProfilesRequest, db: Session = Depends(get_db)):
             code=SUCCESS["code"],
             message="Profiles processed and stored successfully!",
             data=predictions
-        )
+        ).dict()
 
     except Exception as e:
-        db.rollback()
         raise HTTPException(
             status_code=500,
             detail=ErrorResponse(
@@ -76,3 +66,5 @@ def add_profiles(request: BulkProfilesRequest, db: Session = Depends(get_db)):
                 details=str(e)
             ).dict()
         )
+    finally:
+        db.rollback()
