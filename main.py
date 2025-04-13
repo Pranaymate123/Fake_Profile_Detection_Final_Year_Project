@@ -1,7 +1,5 @@
-from fastapi import FastAPI, Depends
-from pydantic import BaseModel
-from sqlalchemy.orm import Session
-from app.database import SessionLocal, test_connection
+
+from app.database import SessionLocal
 from app.database import engine
 from app.models import Base
 
@@ -14,7 +12,6 @@ from app.constants import SUCCESS, ERRORS
 from app.services import store_profile, generate_profile_ref
 
 app = FastAPI()
-
 
 # Create tables if they do not exist
 Base.metadata.create_all(bind=engine)
