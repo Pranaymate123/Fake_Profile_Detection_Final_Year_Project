@@ -1,9 +1,6 @@
-
-from app.database import SessionLocal
-from app.database import engine
+from app.database import SessionLocal, engine
 from app.models import Base
-
-from fastapi import FastAPI, Depends, HTTPException , Body
+from fastapi import FastAPI, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
 from app.models import Profile
 from app.schemas import BulkProfilesRequest, SuccessResponse, ErrorResponse
@@ -25,22 +22,22 @@ def get_db():
         db.close()
 
 
-@app.post("/add-profiles", response_model=SuccessResponse, responses={400: {"model": ErrorResponse}})
+@app.post("/predict-profiles", response_model=SuccessResponse, responses={400: {"model": ErrorResponse}})
 def add_profiles(request: BulkProfilesRequest = Body(...), db: Session = Depends(get_db)):
     try:
         predictions = []
 
         for profile_data in request.profiles:
-            profile_dict = profile_data.dict()  # Updated for Pydantic v2
+            profile_dict = profile_data.dict()  # Converts the Pydantic model to a dictionary
 
             # Generate unique profile reference
             profile_ref = generate_profile_ref(profile_dict)
 
             # Get prediction (0 = Fake, 1 = Legit)
-            status = predict_profile(profile_dict)  # No need to convert
+            status = predict_profile(profile_dict)  # Predicts using the updated model
 
             # Store the profile (prevents duplicate storage)
-            stored_profile = store_profile(db, profile_ref, status)
+            stored_profile = store_profile(db, profile_dict, status)
 
             # Append results with profile_ref instead of id
             predictions.append({
@@ -64,4 +61,4 @@ def add_profiles(request: BulkProfilesRequest = Body(...), db: Session = Depends
             ).dict()
         )
     finally:
-        db.rollback()
+        db.rollback()  # Rollback in case of any exception
