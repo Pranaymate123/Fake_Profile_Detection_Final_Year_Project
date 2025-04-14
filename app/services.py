@@ -17,8 +17,11 @@ def store_profile(db: Session, profile_data: Dict, status: int):
     # Check if the profile already exists
     existing_profile = db.query(Profile).filter(Profile.profile_ref == profile_ref).first()
     if existing_profile:
+        print("Duplicate profile occured")
         return existing_profile  # Avoid duplicate insertion
 
+
+    print("Profile added to the database")
     # Insert new profile with the prediction status (0: Fake, 1: Legit)
     new_profile = Profile(profile_ref=profile_ref, status=status)
     db.add(new_profile)

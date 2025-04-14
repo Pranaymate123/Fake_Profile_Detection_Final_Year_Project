@@ -1,4 +1,6 @@
 from app.database import SessionLocal, engine
+# from app.exceptions import AppException
+# from app.exceptions_handler import app_exception_handler
 from app.models import Base
 from fastapi import FastAPI, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
@@ -24,14 +26,16 @@ def get_db():
 
 @app.post("/predict-profiles", response_model=SuccessResponse, responses={400: {"model": ErrorResponse}})
 def add_profiles(request: BulkProfilesRequest = Body(...), db: Session = Depends(get_db)):
+
+    print("prediction profile api get called ")
     try:
         predictions = []
 
         for profile_data in request.profiles:
             profile_dict = profile_data.dict()  # Converts the Pydantic model to a dictionary
 
-            # Generate unique profile reference
-            profile_ref = generate_profile_ref(profile_dict)
+            # # Generate unique profile reference
+            # profile_ref = generate_profile_ref(profile_dict)
 
             # Get prediction (0 = Fake, 1 = Legit)
             status = predict_profile(profile_dict)  # Predicts using the updated model
@@ -47,7 +51,7 @@ def add_profiles(request: BulkProfilesRequest = Body(...), db: Session = Depends
 
         return SuccessResponse(
             code=SUCCESS["code"],
-            message="Profiles processed and stored successfully!",
+            message="Profiles predicted successfully!",
             data=predictions
         ).dict()
 
@@ -62,3 +66,7 @@ def add_profiles(request: BulkProfilesRequest = Body(...), db: Session = Depends
         )
     finally:
         db.rollback()  # Rollback in case of any exception
+
+
+#  Registering the exception Handlers
+
