@@ -7,3 +7,4 @@ cryptography
 SQLAlchemy~=2.0.39
 pymysql
 python-dotenv
+pandas==1.5.3
