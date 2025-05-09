@@ -1,14 +1,18 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
+from dotenv import load_dotenv
 
+# Always load .env locally
+load_dotenv()
 
-# Database Configuration
-MYSQL_HOST = "localhost"
-MYSQL_PORT = 3306
-MYSQL_DATABASE = "fake_profiles"
-MYSQL_USERNAME = "root"
-MYSQL_PASSWORD = "123"
+# Read database configuration from environment variables
+MYSQL_HOST = os.getenv("MYSQL_HOST", "localhost")
+MYSQL_PORT = os.getenv("MYSQL_PORT", "3306")
+MYSQL_DATABASE = os.getenv("MYSQL_DATABASE", "fake_profiles")
+MYSQL_USERNAME = os.getenv("MYSQL_USERNAME", "root")
+MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "")
 
 DATABASE_URL = f"mysql+pymysql://{MYSQL_USERNAME}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DATABASE}"
 
@@ -24,4 +28,3 @@ def test_connection():
             print("✅ Database connected successfully!")
     except Exception as e:
         print(f"❌ Database connection failed: {e}")
-
